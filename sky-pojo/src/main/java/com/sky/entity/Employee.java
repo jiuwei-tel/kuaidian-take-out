@@ -30,6 +30,7 @@ public class Employee implements Serializable {
 
     private String idNumber;
 
+    //账号状态 1正常 0停用
     private Integer status;
 
     //@JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
