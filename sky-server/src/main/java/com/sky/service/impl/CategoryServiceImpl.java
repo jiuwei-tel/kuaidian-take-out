@@ -36,7 +36,6 @@ public class CategoryServiceImpl implements CategoryService {
 
     /**
      * 新增分类
-     *
      * @param categoryDTO
      * @return
      */
@@ -49,17 +48,25 @@ public class CategoryServiceImpl implements CategoryService {
         //分类状态默认为禁用状态0
         category.setStatus(StatusConstant.DISABLE);
 
+
+        //已经使用了@AutoFill注解，不需要手动修改
+
         //设置创建时间、修改时间、创建人、修改人
-        category.setCreateTime(LocalDateTime.now());
-        category.setUpdateTime(LocalDateTime.now());
-        category.setCreateUser(BaseContext.getCurrentId());
-        category.setUpdateUser(BaseContext.getCurrentId());
+        //category.setCreateTime(LocalDateTime.now());
+        //category.setUpdateTime(LocalDateTime.now());
+        //category.setCreateUser(BaseContext.getCurrentId());
+        //category.setUpdateUser(BaseContext.getCurrentId());
         categoryMapper.insert(category);
 
         return category;
 
     }
 
+    /**
+     * 分类分页查询
+     * @param categoryPageQueryDTO
+     * @return
+     */
     @Override
     public PageResult page(CategoryPageQueryDTO categoryPageQueryDTO) {
         //page-helper
@@ -71,6 +78,10 @@ public class CategoryServiceImpl implements CategoryService {
         return new PageResult(total,list);
     }
 
+    /**
+     * 根据id删除分类
+     * @param id
+     */
     @Override
     public void deleteById(long id) {
         //查询当前分类是否关联了菜品，如果关联了就抛出业务异常
@@ -101,10 +112,14 @@ public class CategoryServiceImpl implements CategoryService {
         Category category = new Category();
         //拷贝
         BeanUtils.copyProperties(categoryDTO, category);
+
+        //已经使用了@AutoFill注解，不需要手动修改
+
         //设置更新时间
-        category.setUpdateTime(LocalDateTime.now());
+        //category.setUpdateTime(LocalDateTime.now());
         //设置修改人信息
-        category.setUpdateUser(BaseContext.getCurrentId());
+        //category.setUpdateUser(BaseContext.getCurrentId());
+
         categoryMapper.update(category);
         return category;
     }
@@ -118,8 +133,8 @@ public class CategoryServiceImpl implements CategoryService {
         Category category = Category.builder()
                 .id(id)
                 .status(status)
-                .updateTime(LocalDateTime.now())
-                .updateUser(BaseContext.getCurrentId())
+                //.updateTime(LocalDateTime.now())
+                //.updateUser(BaseContext.getCurrentId())
                 .build();
         categoryMapper.update(category);
     }
