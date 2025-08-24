@@ -187,4 +187,20 @@ public class DishServiceImpl implements DishService {
     }
 
 
+    /**
+     * 根据分类id查询菜品
+     * @param categoryId
+     * @return
+     */
+    @Override
+    public List<Dish> list(Long categoryId) {
+        //根据分类id和启用状态查询菜品(禁用的不会被查到)
+        Dish dish = Dish.builder()
+                .categoryId(categoryId)
+                .status(StatusConstant.ENABLE)
+                .build();
+        return dishMapper.list(dish);
+    }
+
+
 }
