@@ -29,13 +29,14 @@ public class CommonController {
 
     /**
      * 上传文件
+     *
      * @param file
      * @return
      */
     @PostMapping("/upload")
     @ApiOperation("文件上传")
-    public Result<String> upload(MultipartFile file){
-        log.info("文件上传：{}",file);
+    public Result<String> upload(MultipartFile file) {
+/*        log.info("文件上传：{}",file);
 
         try {
             //获取原始文件名
@@ -48,9 +49,33 @@ public class CommonController {
             aliOssUtil.upload(file.getBytes(), objectName);
         } catch (IOException e) {
             log.error("文件上传失败：{}",e);
+            return Result.error(MessageConstant.UPLOAD_FAILED);
         }
 
         return Result.error(MessageConstant.UPLOAD_FAILED);
+        return Result.success(MessageConstant.UPLOAD_SUCCESS);*/
+
+
+        log.info("文件上传接口被调用:{}", file);
+        String filePath = null;
+        try {
+            //  获取原始文件名
+            String originalFilename = file.getOriginalFilename();
+            // 截取原始文件名的扩展名
+            String extName = originalFilename.substring(originalFilename.lastIndexOf("."));
+            // 生成新的文件名: UUID + 扩展名
+            String newFileName = UUID.randomUUID().toString() + extName;
+
+            // 文件上传请求路径
+            filePath = aliOssUtil.upload(file.getBytes(), newFileName);
+        } catch (IOException e) {
+            e.printStackTrace();
+            log.error("文件上传失败:{}", e);
+            return Result.error(MessageConstant.UPLOAD_FAILED);
+        }
+        return Result.success(filePath);
+
+
     }
 
 

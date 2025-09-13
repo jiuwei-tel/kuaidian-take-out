@@ -14,6 +14,10 @@ import org.springframework.context.annotation.Configuration;
 @Slf4j
 public class OssConfiguration {
 
+
+    // 通过参数注入的方式，将Oss的配置信息传递进来
+    // Bean 如果容器中没有AliOssUtil对象，则创建AliOssUtil对象
+    // ConditionalOnBean 表示如果容器中存在AliOssUtil对象，则不创建AliOssUtil对象
     @Bean
     @ConditionalOnMissingBean
     public AliOssUtil aliOssUtil(AliOssProperties aliOssProperties){
