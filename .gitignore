@@ -4,3 +4,20 @@
 *.class
 *Test.java
 **/test/
+
+# ============ 本地环境配置（含数据库密码 / 阿里云 AccessKey / 微信 secret）============
+# 真实配置一律不入库，仓库只提供 application-dev.yml.example 模板
+**/application-dev.yml
+**/application-local.yml
+*.local
+.env.local
+
+# ============ 日志与系统文件 ============
+*.log
+.DS_Store
+Thumbs.db
+
+# ============ 跟练课程视频时误产生的杂物（与本项目无关）============
+# absolute/ 是「绝对路径」被当成目录名建出来的空文件；takeout.sql 是另一个项目的表结构
+absolute/
+takeout.sql

@@ -12,11 +12,13 @@
     <artifactId>sky-take-out</artifactId>
     <packaging>pom</packaging>
     <version>1.0-SNAPSHOT</version>
+    <!-- 子模块 -->
     <modules>
         <module>sky-common</module>
         <module>sky-pojo</module>
         <module>sky-server</module>
     </modules>
+    <!-- 依赖版本管理 -->
     <properties>
         <mybatis.spring>2.2.0</mybatis.spring>
         <lombok>1.18.30</lombok>
@@ -97,6 +99,13 @@
                 <groupId>com.aliyun.oss</groupId>
                 <artifactId>aliyun-sdk-oss</artifactId>
                 <version>${aliyun.sdk.oss}</version>
+            </dependency>
+
+
+            <dependency>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-starter-websocket</artifactId>
+                <version>2.7.3</version>
             </dependency>
 
             <dependency>

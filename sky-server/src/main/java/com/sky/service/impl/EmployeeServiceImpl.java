@@ -68,6 +68,7 @@ public class EmployeeServiceImpl implements EmployeeService {
 
     /**
      * 新增员工
+     *
      * @param employeeDTO
      */
     public void save(EmployeeDTO employeeDTO) {
@@ -112,6 +113,7 @@ public class EmployeeServiceImpl implements EmployeeService {
 
     /**
      * 员工分页查询
+     *
      * @param employeePageQueryDTO
      * @return
      */
@@ -119,7 +121,9 @@ public class EmployeeServiceImpl implements EmployeeService {
     public PageResult pageQuery(EmployeePageQueryDTO employeePageQueryDTO) {
         //page-helper
         //开始分页查询
-        PageHelper.startPage(employeePageQueryDTO.getPage(),employeePageQueryDTO.getPageSize());
+        int pageSize = 10;  //假如固定每页展示10条数据
+        //PageHelper.startPage(employeePageQueryDTO.getPage(),employeePageQueryDTO.getPageSize());
+        PageHelper.startPage(employeePageQueryDTO.getPage(), pageSize);
         Page<Employee> page = employeeMapper.pageQuery(employeePageQueryDTO);
         long total = page.getTotal();
         List<Employee> records = page.getResult();
@@ -128,6 +132,7 @@ public class EmployeeServiceImpl implements EmployeeService {
 
     /**
      * 启用禁用员工账号
+     *
      * @param status
      * @param id
      */
@@ -143,6 +148,7 @@ public class EmployeeServiceImpl implements EmployeeService {
 
     /**
      * 根据id修改员工信息
+     *
      * @param employeeDTO
      */
     @Override
@@ -166,6 +172,7 @@ public class EmployeeServiceImpl implements EmployeeService {
 
     /**
      * 根据id查询员工信息
+     *
      * @param id
      * @return
      */
