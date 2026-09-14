@@ -4,7 +4,16 @@
 （界面与文档里的「苍穹外卖」→「筷点外卖」），代码结构、包名 `com.sky`、数据库名
 `sky_take_out` 全部保持原样。
 
-> 配套前端：[sky-take-out-web](.)（Vue 3 + Vite + Element Plus，含营销首页与商家管理后台）
+> 前端代码在**同一个仓库**的 [`web/`](web/) 目录（Vue 3 + Vite + Element Plus，
+> 含营销首页与商家管理后台）。
+
+### 仓库结构
+
+| 目录 / 文件 | 内容 |
+| --- | --- |
+| `sky-common/`、`sky-pojo/`、`sky-server/` | 后端 Maven 三模块 |
+| `docs/sky_take_out.sql` | 演示数据库快照（个人信息已全部脱敏） |
+| `web/` | 前端工程（Vue 3 + Vite + Element Plus），有独立 README |
 
 ---
 

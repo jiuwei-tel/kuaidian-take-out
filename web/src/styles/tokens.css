@@ -1,0 +1,99 @@
+/* ==========================================================================
+   筷点外卖 · 商家后台 设计令牌
+   基调：「出单机」—— 灶青铁锅的骨架、热敏小票的底、灶火与油墨的点色
+   原则：颜色只表达状态，不表达装饰；数字一律等宽便于扫读
+   ========================================================================== */
+
+:root {
+  /* ---- 墨（骨架） ---- */
+  --ink-950: #0E1817;
+  --ink-900: #16211F;
+  --ink-800: #1E2E2A;
+  --ink-700: #2A3E39;
+  --ink-600: #3B544D;
+
+  /* ---- 纸（内容底） ---- */
+  --paper: #f4f5f2;
+  --surface: #ffffff;
+  --surface-sunken: #fafbf9;
+
+  /* ---- 线 ---- */
+  --edge: #e4e7e2;
+  --edge-strong: #d2d7d0;
+
+  /* ---- 字 ---- */
+  --text: #1c2523;
+  --text-2: #5c6b66;
+  --text-3: #8a968f;
+  --text-invert: #f4f5f2;
+
+  /* ---- 品牌黄：筷点外卖的品牌色，只在极少数地方出现 ---- */
+  --brand: #ffc200;
+  --brand-deep: #e0a800;
+
+  /* ---- 主色：灶青，青砖铁锅的颜色。按钮、链接、选中态 ---- */
+  --teal: #1e5a4e;
+  --teal-dark: #174438;
+  --teal-soft: #e4efec;
+
+  /* ---- 灶火橙红：只用于「需要你马上处理」的状态 ---- */
+  --fire: #d9480f;
+  --fire-soft: #fdece5;
+
+  /* ---- 状态编码（订单流转 / 售卖状态） ---- */
+  --st-wait: #d9480f; /* 待接单  需要立刻处理 */
+  --st-accept: #1e5a4e; /* 已接单  后厨在做 */
+  --st-send: #2f6fb5; /* 派送中  在路上 */
+  --st-done: #4b7a3f; /* 已完成 */
+  --st-cancel: #8a968f; /* 已取消 */
+  --st-on: #1e5a4e; /* 起售 / 启用 */
+  --st-off: #8a968f; /* 停售 / 禁用 */
+
+  /* ---- 字体 ---- */
+  --font-sans: 'PingFang SC', 'Microsoft YaHei', 'Hiragino Sans GB',
+    'Source Han Sans SC', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-mono: ui-monospace, 'JetBrains Mono', 'Cascadia Mono', Consolas,
+    'Courier New', monospace;
+
+  /* ---- 尺寸 ---- */
+  --sidebar-w: 208px;
+  --sidebar-w-collapsed: 64px;
+  --navbar-h: 56px;
+  --radius: 6px;
+  --radius-sm: 4px;
+
+  /* ---- 阴影：极克制，只有浮层才用 ---- */
+  --shadow-card: 0 1px 2px rgba(22, 33, 31, 0.04);
+  --shadow-pop: 0 6px 24px rgba(22, 33, 31, 0.12);
+
+  /* ---- Element Plus 对齐 ---- */
+  --el-color-primary: #1e5a4e;
+  --el-color-primary-light-3: #4a8074;
+  --el-color-primary-light-4: #63958a;
+  --el-color-primary-light-5: #7ba79e;
+  --el-color-primary-light-6: #95b9b1;
+  --el-color-primary-light-7: #afcbc5;
+  --el-color-primary-light-8: #c7dcd7;
+  --el-color-primary-light-9: #e4efec;
+  --el-color-primary-dark-2: #174438;
+
+  --el-color-success: #4b7a3f;
+  --el-color-warning: #c98a00;
+  --el-color-danger: #d9480f;
+  --el-color-error: #d9480f;
+  --el-color-info: #8a968f;
+
+  --el-text-color-primary: #1c2523;
+  --el-text-color-regular: #5c6b66;
+  --el-text-color-secondary: #8a968f;
+  --el-border-color: #e4e7e2;
+  --el-border-color-light: #eceeea;
+  --el-border-color-lighter: #f1f3ef;
+  --el-fill-color-blank: #ffffff;
+  --el-bg-color: #ffffff;
+  --el-bg-color-page: #f4f5f2;
+
+  --el-font-family: var(--font-sans);
+  --el-border-radius-base: 4px;
+  --el-border-radius-small: 3px;
+}

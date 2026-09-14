@@ -1,0 +1,377 @@
+/* ==========================================================================
+   全局基础样式 + Element Plus 外观校准
+   ========================================================================== */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#app {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: var(--font-sans);
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--text);
+  background: var(--paper);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+a {
+  color: var(--teal);
+  text-decoration: none;
+}
+
+/* --------------------------------------------------------------------------
+   数字：金额、数量、订单号一律等宽 + 定宽数字，方便纵向比对
+   -------------------------------------------------------------------------- */
+.num {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: 'tnum' 1;
+  letter-spacing: -0.01em;
+}
+
+.num-r {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+
+/* 订单号：小票上打印出来的那串数字 */
+.order-no {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  font-size: 13px;
+  color: var(--text);
+  letter-spacing: -0.02em;
+}
+
+.money::before {
+  content: '¥';
+  font-size: 0.85em;
+  margin-right: 1px;
+  opacity: 0.75;
+}
+
+.muted {
+  color: var(--text-3);
+}
+
+/* --------------------------------------------------------------------------
+   页面骨架：左对齐标题 + 右对齐操作
+   -------------------------------------------------------------------------- */
+.page {
+  padding: 20px 24px 32px;
+}
+
+.page-head {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.page-title {
+  margin: 0;
+  font-size: 19px;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  color: var(--text);
+}
+
+.page-sub {
+  margin: 4px 0 0;
+  font-size: 13px;
+  color: var(--text-3);
+}
+
+.page-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+/* --------------------------------------------------------------------------
+   面板：白底 + 一根发丝线，不用柔和阴影堆叠
+   -------------------------------------------------------------------------- */
+.panel {
+  background: var(--surface);
+  border: 1px solid var(--edge);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-card);
+}
+
+.panel + .panel {
+  margin-top: 16px;
+}
+
+.panel-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--edge);
+}
+
+.panel-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.panel-body {
+  padding: 16px;
+}
+
+/* 筛选条 */
+.filter-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--edge);
+  background: var(--surface-sunken);
+}
+
+.filter-bar .el-input,
+.filter-bar .el-select {
+  width: 180px;
+}
+
+.filter-spacer {
+  flex: 1;
+}
+
+/* 分页条 */
+.pager {
+  display: flex;
+  justify-content: flex-end;
+  padding: 14px 16px;
+  border-top: 1px solid var(--edge);
+}
+
+/* --------------------------------------------------------------------------
+   状态点：把「颜色=状态」这件事在全站统一
+   -------------------------------------------------------------------------- */
+.dot {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  white-space: nowrap;
+}
+
+.dot::before {
+  content: '';
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+  flex-shrink: 0;
+}
+
+.dot-wait {
+  color: var(--st-wait);
+}
+.dot-accept {
+  color: var(--st-accept);
+}
+.dot-send {
+  color: var(--st-send);
+}
+.dot-done {
+  color: var(--st-done);
+}
+.dot-cancel {
+  color: var(--st-cancel);
+}
+.dot-on {
+  color: var(--st-on);
+}
+.dot-off {
+  color: var(--st-off);
+}
+
+/* --------------------------------------------------------------------------
+   小票：来单提醒、订单详情都用这个质感
+   -------------------------------------------------------------------------- */
+.receipt {
+  position: relative;
+  background: var(--surface);
+}
+
+.receipt::before,
+.receipt::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 8px;
+  background-size: 12px 8px;
+  background-repeat: repeat-x;
+}
+
+.receipt::before {
+  top: -8px;
+  background-image: radial-gradient(
+    circle 6px at 6px 0,
+    transparent 6px,
+    var(--surface) 6px
+  );
+}
+
+.receipt::after {
+  bottom: -8px;
+  background-image: radial-gradient(
+    circle 6px at 6px 8px,
+    transparent 6px,
+    var(--surface) 6px
+  );
+}
+
+/* 小票上的虚线齿孔 */
+.perf {
+  border: 0;
+  border-top: 1px dashed var(--edge-strong);
+  margin: 12px 0;
+}
+
+/* --------------------------------------------------------------------------
+   Element Plus 校准
+   -------------------------------------------------------------------------- */
+.el-button {
+  font-weight: 500;
+}
+
+.el-button--primary {
+  --el-button-bg-color: var(--teal);
+  --el-button-border-color: var(--teal);
+  --el-button-hover-bg-color: var(--teal-dark);
+  --el-button-hover-border-color: var(--teal-dark);
+  --el-button-active-bg-color: var(--teal-dark);
+}
+
+/* 危险操作永远是灶火色，和「待处理」同源 */
+.el-button--danger {
+  --el-button-bg-color: var(--fire);
+  --el-button-border-color: var(--fire);
+}
+
+.el-table {
+  --el-table-border-color: var(--edge);
+  --el-table-header-bg-color: var(--surface-sunken);
+  --el-table-header-text-color: var(--text-2);
+  --el-table-row-hover-bg-color: #f7f9f6;
+  font-size: 13px;
+}
+
+.el-table th.el-table__cell {
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
+.el-table .cell {
+  line-height: 1.5;
+}
+
+.el-dialog {
+  --el-dialog-border-radius: var(--radius);
+  border: 1px solid var(--edge);
+}
+
+.el-dialog__header {
+  margin-right: 0;
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--edge);
+}
+
+.el-dialog__title {
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.el-dialog__body {
+  padding: 20px;
+}
+
+.el-dialog__footer {
+  padding: 12px 20px;
+  border-top: 1px solid var(--edge);
+}
+
+.el-form-item__label {
+  font-weight: 500;
+  color: var(--text-2);
+}
+
+.el-tabs__item {
+  font-weight: 500;
+}
+
+.el-tag {
+  border-radius: 3px;
+  font-weight: 500;
+}
+
+.el-message-box {
+  --el-messagebox-border-radius: var(--radius);
+}
+
+.el-pagination {
+  --el-pagination-font-size: 13px;
+  font-family: var(--font-sans);
+}
+
+.el-pagination.is-background .el-pager li.is-active {
+  background-color: var(--teal);
+  border-color: var(--teal);
+}
+
+/* 滚动条 */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #cfd5cd;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #b6beb4;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+/* 键盘焦点必须可见 */
+:focus-visible {
+  outline: 2px solid var(--teal);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
