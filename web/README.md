@@ -8,13 +8,19 @@
 
 ## 界面预览
 
-| 营销首页（纯 CSS + 内联 SVG，不依赖任何图片文件） | 工作台 |
-| --- | --- |
-| ![营销首页](docs/screenshots/01-home.png) | ![工作台](docs/screenshots/02-dashboard.png) |
+**营销首页**（公开页面，纯 CSS + 内联 SVG 实现，不依赖任何图片文件）
 
-| 菜品管理 | 从后台返回首页 |
-| --- | --- |
-| ![菜品管理](docs/screenshots/03-dish.png) | ![返回首页](docs/screenshots/04-back-home.png) |
+![营销首页](docs/screenshots/01-home.png)
+
+**商家管理后台**（统一挂在 `/manage` 下，含工作台、订单、菜品、套餐、分类、员工、数据统计七个模块）
+
+| 工作台 | 菜品管理 |
+| :---: | :---: |
+| <img src="docs/screenshots/02-dashboard.png" width="430"> | <img src="docs/screenshots/03-dish.png" width="430"> |
+
+后台每页顶栏左侧与侧边栏品牌区都能一键回首页：
+
+<img src="docs/screenshots/04-back-home.png" width="860">
 
 ---
 
