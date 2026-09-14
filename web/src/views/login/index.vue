@@ -225,7 +225,7 @@ async function onSubmit() {
   color: #9db0a9;
 }
 
-/* ---------------- 出单小票 ---------------- */
+/* ---------------- 小票卡片 ---------------- */
 .ticket-wrap {
   position: relative;
   flex: 1;

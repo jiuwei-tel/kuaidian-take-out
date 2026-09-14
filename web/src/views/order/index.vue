@@ -597,7 +597,7 @@ onMounted(() => {
   color: var(--text-2);
 }
 
-/* 待接单角标用灶火色，和页面上的「需要动作」保持同一套语言 */
+/* 待接单角标用告警色 */
 .tab-badge.is-alert {
   background: var(--fire);
   color: #fff;

@@ -196,7 +196,7 @@ async function onCommand(command) {
   color: var(--text);
 }
 
-/* 回官网的入口：做成带字按钮而不是光秃秃的图标，否则容易被当成装饰忽略掉 */
+/* 回官网的入口，用带字按钮更醒目 */
 .nav-home {
   display: flex;
   align-items: center;
@@ -225,7 +225,7 @@ async function onCommand(command) {
   font-size: 14px;
 }
 
-/* 窄屏收成纯图标，把横向空间让给页面标题 */
+/* 窄屏下收成纯图标 */
 @media (max-width: 1000px) {
   .nav-home span {
     display: none;
@@ -284,7 +284,7 @@ async function onCommand(command) {
   box-shadow: 0 0 0 3px rgba(138, 150, 143, 0.16);
 }
 
-/* 状态取不到时刻意做得「熄灭」而不是「打烊」，避免误读成生意已关 */
+/* 状态取不到时显示为熄灭，不显示为打烊 */
 .shop-lamp.is-unknown {
   background: transparent;
   border: 1px solid var(--st-off);

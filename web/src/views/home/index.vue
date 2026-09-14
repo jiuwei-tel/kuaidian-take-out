@@ -373,7 +373,7 @@ const ICONS = {
   padding: 0 24px;
 }
 
-/* 中文段落最怕末行只剩一两个字，让浏览器把短段落断行拉匀 */
+/* 让浏览器把短段落断行拉匀，避免末行只剩一两个字 */
 .hero-sub,
 .sec-sub,
 .step-desc,
@@ -624,7 +624,7 @@ const ICONS = {
   place-items: center;
 }
 
-/* 一块素色圆盘 + 一圈虚线，像餐盘，也像配送路线 */
+/* 圆盘 + 虚线圈装饰 */
 .plate {
   position: absolute;
   width: min(420px, 88%);
@@ -742,7 +742,7 @@ const ICONS = {
   color: var(--text-3);
 }
 
-/* 三段进度：只有一条线在生长，全页仅此一处动效 */
+/* 三段进度条 */
 .scr-track {
   position: relative;
   display: flex;
@@ -1058,7 +1058,7 @@ const ICONS = {
   white-space: nowrap;
 }
 
-/* 菜单上的点线引导符：把菜名和价格连起来，像真的菜单 */
+/* 菜名和价格之间用点线连接 */
 .leader {
   flex: 1;
   min-width: 20px;

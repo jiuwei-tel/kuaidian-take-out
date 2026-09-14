@@ -328,7 +328,7 @@ onMounted(loadAll)
   color: var(--text-2);
 }
 
-/* 待接单 > 0 时才亮起来，这才是真正需要动作的地方 */
+/* 待接单大于 0 时才高亮 */
 .mrow.is-alert .mrow-value {
   color: var(--fire);
 }

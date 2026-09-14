@@ -47,7 +47,7 @@ a {
   text-align: right;
 }
 
-/* 订单号：小票上打印出来的那串数字 */
+/* 订单号 */
 .order-no {
   font-family: var(--font-mono);
   font-variant-numeric: tabular-nums;
@@ -265,7 +265,7 @@ a {
   --el-button-active-bg-color: var(--teal-dark);
 }
 
-/* 危险操作永远是灶火色，和「待处理」同源 */
+/* 危险操作用告警色 */
 .el-button--danger {
   --el-button-bg-color: var(--fire);
   --el-button-border-color: var(--fire);

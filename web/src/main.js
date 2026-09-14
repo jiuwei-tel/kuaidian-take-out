@@ -4,7 +4,7 @@ import ElementPlus from 'element-plus'
 import zhCn from 'element-plus/es/locale/lang/zh-cn'
 import * as ElementPlusIconsVue from '@element-plus/icons-vue'
 
-// 顺序有讲究：Element Plus 的样式先加载，我们自己的令牌后覆盖
+// 顺序不能反：先加载 Element Plus 样式，再用自己的令牌覆盖
 import 'element-plus/dist/index.css'
 import '@/styles/tokens.css'
 import '@/styles/index.css'

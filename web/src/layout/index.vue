@@ -287,7 +287,7 @@ onBeforeUnmount(() => {
   margin-left: 0;
 }
 
-/* 单一编排的入场：从右侧滑入并轻微摆正 */
+/* 从右侧滑入 */
 .reminder-enter-active {
   transition: opacity 0.24s ease, transform 0.3s cubic-bezier(0.2, 0.9, 0.3, 1);
 }

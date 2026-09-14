@@ -141,7 +141,7 @@ const top10Ref = ref(null)
 
 const charts = shallowRef({})
 
-/* 图表配色与全站令牌保持一致：灶青主、品牌黄次 */
+/* 图表配色与全站令牌一致 */
 const C = {
   teal: '#1e5a4e',
   brand: '#ffc200',
@@ -186,7 +186,7 @@ function baseOption(dates) {
   }
 }
 
-/** 主序列统一带一层很淡的面积，避免折线飘在空白里 */
+/** 主序列加一层很淡的面积 */
 function areaSeries(name, data, color) {
   return {
     name,
@@ -389,7 +389,7 @@ async function loadAll() {
               data: rNumbers,
               barWidth: 13,
               itemStyle: {
-                // 销冠用品牌黄单独标出来，其余统一灶青
+                // 销量第一名用品牌黄，其余用主色
                 color: (params) => (params.dataIndex === rNames.length - 1 ? C.brand : C.teal),
                 borderRadius: [0, 3, 3, 0],
               },

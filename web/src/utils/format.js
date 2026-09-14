@@ -1,7 +1,7 @@
 /**
- * 后端 JacksonObjectMapper 把 LocalDateTime 序列化成 "yyyy-MM-dd HH:mm"（注意不带秒），
- * 所以这里不要再自作主张地解析成 Date 再格式化，否则时区会把它改掉。
- * 这里只做「空值兜底」和「把 T 换成空格」两件事。
+ * 后端 JacksonObjectMapper 把 LocalDateTime 序列化成 "yyyy-MM-dd HH:mm"（不带秒），
+ * 不要再解析成 Date 重新格式化，否则时区会把时间改掉。
+ * 这里只做空值兜底和把 T 换成空格。
  */
 export function fmtDateTime(value) {
   if (!value) return '—'

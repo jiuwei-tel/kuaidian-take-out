@@ -42,7 +42,7 @@ const version = 'v1.0.0'
 const route = useRoute()
 const router = useRouter()
 
-// 菜单直接从路由表里长出来，避免两处维护
+// 菜单从路由表生成，避免两处维护
 const menus = computed(() => {
   const root = router.options.routes.find((r) => r.path === ADMIN_ROOT)
   return (root?.children || []).map((child) => ({
@@ -86,7 +86,7 @@ const activePath = computed(() => route.path)
   background: rgba(255, 255, 255, 0.05);
 }
 
-/* 平时收着，hover 才浮出来，不和菜单抢注意力 */
+/* hover 时才浮出来 */
 .brand-back {
   margin-left: auto;
   font-size: 13px;
@@ -149,7 +149,7 @@ const activePath = computed(() => route.path)
   letter-spacing: 0.02em;
 }
 
-/* 选中态：一条品牌黄的立标，其余保持安静 */
+/* 选中态：左侧一条品牌黄竖条 */
 .sky-menu :deep(.el-menu-item.is-active) {
   background: rgba(255, 255, 255, 0.08);
   font-weight: 500;
