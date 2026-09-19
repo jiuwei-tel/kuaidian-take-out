@@ -63,8 +63,14 @@ public class Orders implements Serializable {
     //支付状态 0未支付 1已支付 2退款
     private Integer payStatus;
 
-    //实收金额
+    //实收金额（已扣除优惠券抵扣）
     private BigDecimal amount;
+
+    //使用的优惠券领取记录id
+    private Long voucherId;
+
+    //优惠券抵扣金额
+    private BigDecimal voucherAmount;
 
     //备注
     private String remark;
@@ -100,10 +106,14 @@ public class Orders implements Serializable {
     private LocalDateTime deliveryTime;
 
     //打包费
-    private int packAmount;
+    //这两个字段原来是基本类型 int，而 OrdersSubmitDTO 里是包装类型 Integer。
+    //订单为 null 时（接入方没传这个字段），BeanUtils.copyProperties 拆箱会抛
+    //NullPointerException，整个下单接口 500。改成包装类型，库里是 not null default 0，
+    //不传就是 0。别改回 int。
+    private Integer packAmount;
 
     //餐具数量
-    private int tablewareNumber;
+    private Integer tablewareNumber;
 
     //餐具数量状态  1按餐量提供  0选择具体数量
     private Integer tablewareStatus;

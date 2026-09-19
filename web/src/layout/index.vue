@@ -17,7 +17,7 @@
       <div v-for="item in reminders" :key="item.id" class="reminder">
         <div class="reminder-card receipt">
           <div class="reminder-head">
-            <span class="reminder-flag">来单提醒</span>
+            <span class="reminder-flag">{{ item.kind === 'urge' ? '顾客催单' : '来单提醒' }}</span>
             <button
               type="button"
               class="reminder-close"
@@ -37,7 +37,7 @@
 
           <div class="reminder-actions">
             <el-button type="primary" size="small" @click="goHandle(item)">
-              去接单
+              {{ item.kind === 'urge' ? '去看看' : '去接单' }}
             </el-button>
             <el-button size="small" @click="dismiss(item.id)">知道了</el-button>
           </div>
@@ -89,6 +89,8 @@ function pushReminder(payload) {
   reminders.value.unshift({
     id: `${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
     orderId: payload?.orderId,
+    // type=1 是新订单，type=2 是顾客催单，小票上的文案据此区分
+    kind: payload?.type === 2 ? 'urge' : 'new',
     orderNo,
     time: dayjs().format('HH:mm:ss'),
   })
@@ -107,7 +109,10 @@ function dismiss(id) {
 
 function goHandle(item) {
   dismiss(item.id)
-  router.push({ path: '/manage/order', query: { status: 2, number: item.orderNo || undefined } })
+  const query = { number: item.orderNo || undefined }
+  // 新订单必然在待接单里；催单那一单可能已经被接走了，就别加筛选条件
+  if (item.kind === 'new') query.status = 2
+  router.push({ path: '/manage/order', query })
 }
 
 function connect() {
@@ -125,8 +130,8 @@ function connect() {
   socket.onmessage = (event) => {
     try {
       const payload = JSON.parse(event.data)
-      // type=2 是催单/来单提醒
-      if (payload?.type === 2) {
+      // 后端只会推这两种：type=1 来单提醒、type=2 顾客催单
+      if (payload?.type === 1 || payload?.type === 2) {
         pushReminder(payload)
       }
     } catch {

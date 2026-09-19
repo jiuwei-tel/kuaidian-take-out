@@ -1,6 +1,6 @@
 import axios from 'axios'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { clearAuth, getToken } from '@/utils/auth'
+import { clearAuth, clearUserAuth, getToken, getUserToken } from '@/utils/auth'
 
 const service = axios.create({
   baseURL: import.meta.env.VITE_API_BASE_URL || '/',
@@ -8,16 +8,33 @@ const service = axios.create({
 })
 
 /* --------------------------------------------------------------------------
-   请求拦截：管理端把 JWT 放在请求头 token 里
-   （用户端对应的是 authentication，本后台只用管理端，所以固定 token）
+   请求拦截：管理端把 JWT 放在请求头 token 里，点餐端放在 authentication 里。
+   后端两边的密钥不一样（itcast / itheima），令牌不能混用，
+   所以这里按 URL 前缀自动挑一个，业务代码里不用管这件事。
    -------------------------------------------------------------------------- */
+function isUserApi(config) {
+  const url = config.url || ''
+  return url.startsWith('/user') || url.startsWith('user/')
+}
+
 service.interceptors.request.use(
   (config) => {
-    const token = getToken()
-    if (token) {
-      config.headers = config.headers || {}
-      config.headers.token = token
+    config.headers = config.headers || {}
+
+    if (isUserApi(config)) {
+      const userToken = getUserToken()
+      if (userToken) {
+        config.headers.authentication = userToken
+      }
+      // 打个标记，响应拦截里遇到 401 要靠它决定跳哪个登录页
+      config.userSide = true
+    } else {
+      const token = getToken()
+      if (token) {
+        config.headers.token = token
+      }
     }
+
     // 上传文件时让浏览器自己带 boundary
     if (config.data instanceof FormData) {
       delete config.headers['Content-Type']
@@ -32,10 +49,18 @@ service.interceptors.request.use(
    -------------------------------------------------------------------------- */
 let sessionExpiredShown = false
 
-function handleSessionExpired() {
+// 管理端和点餐端的登录过期处理不一样，靠 side 区分
+function handleSessionExpired(side = 'admin') {
   if (sessionExpiredShown) return
   sessionExpiredShown = true
-  clearAuth()
+
+  const isUser = side === 'user'
+  if (isUser) {
+    clearUserAuth()
+  } else {
+    clearAuth()
+  }
+
   ElMessageBox.alert('登录状态已过期，请重新登录', '需要重新登录', {
     type: 'warning',
     confirmButtonText: '去登录',
@@ -44,7 +69,7 @@ function handleSessionExpired() {
     .catch(() => {})
     .finally(() => {
       sessionExpiredShown = false
-      window.location.hash = '#/login'
+      window.location.hash = isUser ? '#/order/login' : '#/login'
     })
 }
 
@@ -69,8 +94,8 @@ service.interceptors.response.use(
     const status = error?.response?.status
 
     if (status === 401) {
-      // JwtTokenAdminInterceptor 校验失败时就是返回 401
-      handleSessionExpired()
+      // 两端的拦截器校验失败时都是返回 401
+      handleSessionExpired(error.config?.userSide ? 'user' : 'admin')
       return Promise.reject(error)
     }
 

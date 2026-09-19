@@ -4,12 +4,14 @@
 
     <insert id="insert" parameterType="Orders" useGeneratedKeys="true" keyProperty="id">
         insert into orders
-        (number, status, user_id, address_book_id, order_time, checkout_time, pay_method, pay_status, amount, remark,
+        (number, status, user_id, address_book_id, order_time, checkout_time, pay_method, pay_status, amount,
+         voucher_id, voucher_amount, remark,
          phone, address, consignee, estimated_delivery_time, delivery_status, pack_amount, tableware_number,
          tableware_status)
         values (#{number}, #{status}, #{userId}, #{addressBookId}, #{orderTime}, #{checkoutTime}, #{payMethod},
-                #{payStatus}, #{amount}, #{remark}, #{phone}, #{address}, #{consignee},
-                #{estimatedDeliveryTime}, #{deliveryStatus}, #{packAmount}, #{tablewareNumber}, #{tablewareStatus})
+                #{payStatus}, #{amount}, #{voucherId}, #{voucherAmount}, #{remark}, #{phone}, #{address},
+                #{consignee}, #{estimatedDeliveryTime}, #{deliveryStatus}, #{packAmount}, #{tablewareNumber},
+                #{tablewareStatus})
     </insert>
 
     <update id="update" parameterType="com.sky.entity.Orders">
@@ -32,6 +34,15 @@
             </if>
             <if test="deliveryTime != null">
                 delivery_time = #{deliveryTime},
+            </if>
+            <if test="payStatus != null">
+                pay_status = #{payStatus},
+            </if>
+            <if test="payMethod != null">
+                pay_method = #{payMethod},
+            </if>
+            <if test="checkoutTime != null">
+                checkout_time = #{checkoutTime},
             </if>
         </set>
         where id = #{id}

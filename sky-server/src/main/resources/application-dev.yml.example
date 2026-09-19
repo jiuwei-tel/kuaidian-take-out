@@ -14,13 +14,19 @@ sky:
     username: root
     password: 你的MySQL密码
 
-  # 阿里云 OSS：用于菜品/套餐图片上传（/admin/common/upload）
-  # 本地不发图片的话可以先留占位值，上传接口会失败，但前端会自动降级成「手填图片地址」
+  # 阿里云 OSS：项目已改为把图片存到本机磁盘，这里不再需要。
+  # 保留这一段是为了兼容课程原版的配置结构，留占位值即可。
   alioss:
     endpoint: oss-cn-你的地域.aliyuncs.com
     access-key-id: 你的AccessKeyId
     access-key-secret: 你的AccessKeySecret
     bucket-name: 你的Bucket名称
+
+  # 图片上传的落盘位置，不依赖任何云服务
+  # 文件写到 dir 目录下，通过 url-prefix + 文件名 访问
+  upload:
+    dir: upload
+    url-prefix: /images
 
   redis:
     host: localhost

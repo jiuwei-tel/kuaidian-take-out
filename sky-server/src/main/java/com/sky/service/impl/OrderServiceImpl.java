@@ -12,6 +12,7 @@ import com.sky.entity.*;
 import com.sky.exception.AddressBookBusinessException;
 import com.sky.exception.OrderBusinessException;
 import com.sky.exception.ShoppingCartBusinessException;
+import com.sky.exception.VoucherBusinessException;
 import com.sky.mapper.*;
 import com.sky.properties.WeChatProperties;
 import com.sky.result.PageResult;
@@ -21,6 +22,7 @@ import com.sky.vo.OrderPaymentVO;
 import com.sky.vo.OrderStatisticsVO;
 import com.sky.vo.OrderSubmitVO;
 import com.sky.vo.OrderVO;
+import com.sky.vo.UserVoucherVO;
 import com.sky.websocket.WebSocketServer;
 import io.swagger.util.Json;
 import lombok.extern.slf4j.Slf4j;
@@ -53,6 +55,8 @@ public class OrderServiceImpl implements OrderService {
     private UserMapper userMapper;
     @Autowired
     private AddressBookMapper addressBookMapper;
+    @Autowired
+    private VoucherOrderMapper voucherOrderMapper;
     @Autowired
     private WeChatPayUtil weChatPayUtil;
     @Autowired
@@ -94,8 +98,69 @@ public class OrderServiceImpl implements OrderService {
         order.setPayStatus(Orders.UN_PAID);
         order.setOrderTime(LocalDateTime.now());
 
+        //金额按购物车单价乘数量算，不采信前端传过来的 amount。
+        //原课程是直接拿 DTO 里的 amount 入库的，有两个问题：
+        //① 前端要是没传这个字段（比如换个端、或者自己调接口），orders.amount 是 not null，
+        //   插入直接失败，接口报「未知错误」；
+        //② 金额由客户端决定本身就不对，改一下请求体就能一块钱下单。
+        BigDecimal amount = BigDecimal.ZERO;
+        for (ShoppingCart cart : shoppingCartList) {
+            if (cart.getAmount() == null || cart.getNumber() == null) {
+                continue;
+            }
+            amount = amount.add(cart.getAmount().multiply(BigDecimal.valueOf(cart.getNumber())));
+        }
+        order.setAmount(amount);
+        //下面这几个字段在库里都是 not null，而 DTO 里是可空的包装类型，
+        //不传就会以 null 落库、插入直接失败。这里给上默认值：
+        //打包费 0、餐具数量 0、立即送出、餐具按餐量提供。
+        order.setPackAmount(order.getPackAmount() == null ? 0 : order.getPackAmount());
+        order.setTablewareNumber(order.getTablewareNumber() == null ? 0 : order.getTablewareNumber());
+        order.setDeliveryStatus(order.getDeliveryStatus() == null ? 1 : order.getDeliveryStatus());
+        order.setTablewareStatus(order.getTablewareStatus() == null ? 1 : order.getTablewareStatus());
+
+        //优惠券：原价用上面按购物车算出来的 amount，抵扣也在后端算，
+        //前端传来的一律不看。BeanUtils 已经把 DTO 的 voucherId 拷进来了，为 null 就是这单不用券。
+        if (order.getVoucherId() != null) {
+            Long voucherOrderId = order.getVoucherId();
+            //必须是自己抢到的券（查的时候带了 user_id 条件，别人的券查不出来）
+            UserVoucherVO myVoucher = voucherOrderMapper.getByIdAndUserId(voucherOrderId, userId);
+            if (myVoucher == null) {
+                throw new VoucherBusinessException(MessageConstant.VOUCHER_NOT_FOUND);
+            }
+            //只能是还没用过的
+            if (!VoucherOrder.UNUSED.equals(myVoucher.getStatus())) {
+                throw new VoucherBusinessException(MessageConstant.VOUCHER_USED);
+            }
+            //过期了不能用
+            if (myVoucher.getEndTime() != null && LocalDateTime.now().isAfter(myVoucher.getEndTime())) {
+                throw new VoucherBusinessException(MessageConstant.VOUCHER_EXPIRED);
+            }
+            //订单原价要达到券的使用门槛（拿原价比，不是抵扣后的实付）
+            BigDecimal originAmount = order.getAmount();
+            if (myVoucher.getMinAmount() != null && originAmount.compareTo(myVoucher.getMinAmount()) < 0) {
+                throw new VoucherBusinessException(MessageConstant.VOUCHER_AMOUNT_NOT_ENOUGH);
+            }
+            //抵扣金额不能超过订单原价，实付最低到 0
+            BigDecimal deduct = myVoucher.getValue() == null ? BigDecimal.ZERO : myVoucher.getValue();
+            if (deduct.compareTo(originAmount) > 0) {
+                deduct = originAmount;
+            }
+            order.setVoucherAmount(deduct);
+            order.setAmount(originAmount.subtract(deduct));
+        }
+
         //向订单表插入1条数据
         orderMapper.insert(order);
+
+        //核销优惠券：条件更新，返回 0 说明这张券已经被别处用掉了（比如并发拿同一张券下两单）
+        if (order.getVoucherId() != null) {
+            int used = voucherOrderMapper.use(order.getVoucherId(), userId, order.getId(), LocalDateTime.now());
+            if (used == 0) {
+                throw new VoucherBusinessException(MessageConstant.VOUCHER_USED);
+            }
+            log.info("订单{}使用优惠券{}，抵扣{}元", order.getNumber(), order.getVoucherId(), order.getVoucherAmount());
+        }
 
         //订单明细数据
         List<OrderDetail> orderDetailList = new ArrayList<>();
@@ -110,7 +175,8 @@ public class OrderServiceImpl implements OrderService {
         orderDetailMapper.insertBath(orderDetailList);
 
         //清理购物车中的数据
-        shoppingCartMapper.delete(userId);
+        //这里要用 clean（按 user_id 清空），delete 是按主键删单条，传 userId 进去什么也清不掉
+        shoppingCartMapper.clean(userId);
 
         //封装返回结果
         OrderSubmitVO orderSubmitVO = OrderSubmitVO.builder()
@@ -152,18 +218,14 @@ public class OrderServiceImpl implements OrderService {
         OrderPaymentVO vo = jsonObject.toJavaObject(OrderPaymentVO.class);
         vo.setPackageStr(jsonObject.getString("package"));
 
-        //为替代微信支付成功后的数据库订单状态更新，多定义一个方法进行修改
-        Integer OrderPaidStatus = Orders.PAID; //支付状态，已支付
-        Integer OrderStatus = Orders.TO_BE_CONFIRMED;  //订单状态，待接单
-
-        //发现没有将支付时间 check_out属性赋值，所以在这里更新
-        LocalDateTime check_out_time = LocalDateTime.now();
-
-        //获取订单号码
+        //订单号码
         String orderNumber = ordersPaymentDTO.getOrderNumber();
 
-        log.info("调用updateStatus，用于替换微信支付更新数据库状态的问题");
-        orderMapper.updateStatus(OrderStatus, OrderPaidStatus, check_out_time, orderNumber);
+        //原来这里是直接调 updateStatus 改库，绕开了 paySuccess，
+        //订单状态是更新了，但 paySuccess 里的来单提醒发不出去，
+        //商家那边看不到新单提示。走回同一条路，两件事就都能生效。
+        log.info("模拟支付成功，按 paySuccess 处理订单：{}", orderNumber);
+        paySuccess(orderNumber);
 
         return vo;
     }
@@ -393,22 +455,23 @@ public class OrderServiceImpl implements OrderService {
 
         //支付状态
         Integer payStatus = ordersDB.getPayStatus();
-        if (payStatus == 1) {
-            //用户已支付，需要退款
-            String refund = weChatPayUtil.refund(
-                    ordersDB.getNumber(),
-                    ordersDB.getNumber(),
-                    new BigDecimal(0.01),
-                    new BigDecimal(0.01));
-            log.info("申请退款：{}", refund);
-        }
 
-        // 管理端取消订单需要退款，根据订单id更新订单状态、取消原因、取消时间
+        // 管理端取消订单，根据订单id更新订单状态、取消原因、取消时间
         Orders orders = new Orders();
         orders.setId(ordersCancelDTO.getId());
         orders.setStatus(Orders.CANCELLED);
         orders.setCancelReason(ordersCancelDTO.getCancelReason());
         orders.setCancelTime(LocalDateTime.now());
+
+        if (payStatus == Orders.PAID) {
+            //用户已支付，正常流程这里要发起退款。但微信支付没有接入
+            //（application-dev.yml 里没有商户号和证书，WeChatPayUtil.getClient 拿不到私钥文件），
+            //原先调 refund 会直接抛 NullPointerException，接口返回 500，取消动作也做不成。
+            //这里跳过真实退款，只把支付状态置为「已退款」。
+            log.info("订单 {} 已支付，跳过真实退款（微信支付未接入），支付状态置为已退款", ordersDB.getNumber());
+            orders.setPayStatus(Orders.REFUND);
+        }
+
         orderMapper.update(orders);
 
     }
@@ -431,22 +494,20 @@ public class OrderServiceImpl implements OrderService {
 
         //支付状态
         Integer status = ordersDB.getPayStatus();
-        if (status == Orders.PAID) {
-            //用户已支付，需要退款
-            String refund = weChatPayUtil.refund(
-                    ordersDB.getNumber(),
-                    ordersDB.getNumber(),
-                    new BigDecimal(0.01),
-                    new BigDecimal(0.01));
-            log.info("申请退款：{}", refund);
-        }
 
-        // 拒单需要退款，根据订单id更新订单状态、拒单原因、取消时间
+        // 拒单，根据订单id更新订单状态、拒单原因、取消时间
         Orders orders = new Orders();
         orders.setId(ordersDB.getId());
         orders.setStatus(Orders.CANCELLED);
         orders.setRejectionReason(ordersRejectionDTO.getRejectionReason());
         orders.setCancelTime(LocalDateTime.now());
+
+        if (status == Orders.PAID) {
+            //用户已支付，正常流程这里要发起退款。微信支付没有接入（同 cancel 方法），
+            //原先调 refund 会抛 NullPointerException 变成 500，这里跳过并置为已退款。
+            log.info("订单 {} 已支付，跳过真实退款（微信支付未接入），支付状态置为已退款", ordersDB.getNumber());
+            orders.setPayStatus(Orders.REFUND);
+        }
 
         orderMapper.update(orders);
     }
@@ -517,12 +578,8 @@ public class OrderServiceImpl implements OrderService {
 
         // 订单处于待接单状态下取消，需要进行退款
         if (ordersDB.getStatus().equals(Orders.TO_BE_CONFIRMED)) {
-            //调用微信支付退款接口
-            weChatPayUtil.refund(
-                    ordersDB.getNumber(), //商户订单号
-                    ordersDB.getNumber(), //商户退款单号
-                    new BigDecimal(0.01),//退款金额，单位 元
-                    new BigDecimal(0.01));//原订单金额
+            //微信支付没有接入（同上），真实退款调不通，原先这里也会抛 500，改为只记录
+            log.info("订单 {} 取消，跳过真实退款（微信支付未接入），支付状态置为已退款", ordersDB.getNumber());
 
             //支付状态修改为 退款
             orders.setPayStatus(Orders.REFUND);

@@ -27,6 +27,21 @@ public class VoucherOrder implements Serializable {
     //用户id
     private Long userId;
 
-    //下单时间
+    //使用状态：0未使用 1已使用
+    private Integer status;
+
+    //使用时间
+    private LocalDateTime usedTime;
+
+    //使用该券的订单id
+    private Long orderId;
+
+    //领取时间
     private LocalDateTime createTime;
+
+    //未使用
+    public static final Integer UNUSED = 0;
+
+    //已使用
+    public static final Integer USED = 1;
 }

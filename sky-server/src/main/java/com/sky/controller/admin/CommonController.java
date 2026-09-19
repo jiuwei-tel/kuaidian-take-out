@@ -2,7 +2,7 @@ package com.sky.controller.admin;
 
 import com.sky.constant.MessageConstant;
 import com.sky.result.Result;
-import com.sky.utils.AliOssUtil;
+import com.sky.utils.LocalFileUtil;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
@@ -25,10 +25,10 @@ import java.util.UUID;
 public class CommonController {
 
     @Autowired
-    private AliOssUtil aliOssUtil;
+    private LocalFileUtil localFileUtil;
 
     /**
-     * 上传文件
+     * 上传文件，保存到本机磁盘（sky.upload.dir），返回 /images/xxx 形式的相对地址
      *
      * @param file
      * @return
@@ -36,26 +36,6 @@ public class CommonController {
     @PostMapping("/upload")
     @ApiOperation("文件上传")
     public Result<String> upload(MultipartFile file) {
-/*        log.info("文件上传：{}",file);
-
-        try {
-            //获取原始文件名
-            String originalFilename = file.getOriginalFilename();
-            //截取文件拓展名 --> .jpg
-            String extension = originalFilename.substring(originalFilename.lastIndexOf("."));
-            //构建新文件名
-            String objectName = UUID.randomUUID().toString() + extension;
-
-            aliOssUtil.upload(file.getBytes(), objectName);
-        } catch (IOException e) {
-            log.error("文件上传失败：{}",e);
-            return Result.error(MessageConstant.UPLOAD_FAILED);
-        }
-
-        return Result.error(MessageConstant.UPLOAD_FAILED);
-        return Result.success(MessageConstant.UPLOAD_SUCCESS);*/
-
-
         log.info("文件上传接口被调用:{}", file);
         String filePath = null;
         try {
@@ -67,15 +47,12 @@ public class CommonController {
             String newFileName = UUID.randomUUID().toString() + extName;
 
             // 文件上传请求路径
-            filePath = aliOssUtil.upload(file.getBytes(), newFileName);
+            filePath = localFileUtil.upload(file.getBytes(), newFileName);
         } catch (IOException e) {
-            e.printStackTrace();
             log.error("文件上传失败:{}", e);
             return Result.error(MessageConstant.UPLOAD_FAILED);
         }
         return Result.success(filePath);
-
-
     }
 
 

@@ -30,5 +30,8 @@ public class MessageConstant {
     public static final String SECKILL_TIME_ERROR = "不在秒杀时间内";
     public static final String VOUCHER_ALREADY_GOT = "已抢过该优惠券";
     public static final String VOUCHER_STOCK_NOT_ENOUGH = "优惠券已抢完";
+    public static final String VOUCHER_USED = "该优惠券已使用";
+    public static final String VOUCHER_EXPIRED = "该优惠券已过期";
+    public static final String VOUCHER_AMOUNT_NOT_ENOUGH = "订单金额未达到优惠券使用门槛";
     public static final String SECKILL_SYSTEM_BUSY = "系统繁忙，请稍后再试";
 }

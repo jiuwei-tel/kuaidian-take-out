@@ -48,5 +48,5 @@ public interface ShoppingCartMapper {
      * 批量插入购物车
      * @param shoppingCartList
      */
-    void insertBatch(List<ShoppingCart> shoppingCartList);
+    void insertBatch(@Param("list") List<ShoppingCart> shoppingCartList);
 }

@@ -46,11 +46,11 @@ sky:
     user-ttl: 7200000
     user-token-name: authentication
 
-  alioss:
-    endpoint: ${sky.alioss.endpoint}
-    access-key-id: ${sky.alioss.access-key-id}
-    access-key-secret: ${sky.alioss.access-key-secret}
-    bucket-name: ${sky.alioss.bucket-name}
+  upload:
+    # 后台上传的图片落盘目录（相对路径按后端进程的工作目录解析）
+    dir: ${sky.upload.dir}
+    # 对外访问前缀，与 WebMvcConfiguration 里的 /images/** 对应
+    url-prefix: ${sky.upload.url-prefix}
 
   wechat:
     appid: ${sky.wechat.appid}

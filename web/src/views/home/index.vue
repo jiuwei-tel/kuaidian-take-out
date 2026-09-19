@@ -31,7 +31,7 @@
             </template>
           </el-dropdown>
 
-          <button type="button" class="btn btn-ink btn-sm" @click="scrollTo('menu')">
+          <button type="button" class="btn btn-ink btn-sm" @click="goOrder()">
             立即点餐
           </button>
         </div>
@@ -50,7 +50,7 @@
           </p>
 
           <div class="hero-cta">
-            <button type="button" class="btn btn-ink" @click="scrollTo('menu')">立即点餐</button>
+            <button type="button" class="btn btn-ink" @click="goOrder()">立即点餐</button>
             <button type="button" class="btn btn-ghost" @click="goAdmin(dashboardPath)">
               商家后台
             </button>
@@ -151,7 +151,7 @@
           <p class="menu-note">
             以下为示例菜单，实际供应以门店当日为准。点击「立即点餐」即可开始下单。
           </p>
-          <button type="button" class="btn btn-brand" @click="scrollTo('menu')">立即点餐</button>
+          <button type="button" class="btn btn-brand" @click="goOrder()">立即点餐</button>
         </div>
 
         <ul class="menu-list">
@@ -193,7 +193,7 @@
         </div>
 
         <div class="closing-cta">
-          <button type="button" class="btn btn-brand" @click="scrollTo('menu')">立即点餐</button>
+          <button type="button" class="btn btn-brand" @click="goOrder()">立即点餐</button>
           <button type="button" class="btn btn-line" @click="goAdmin(dashboardPath)">
             打开管理后台
           </button>
@@ -256,7 +256,7 @@
 <script setup>
 import { computed } from 'vue'
 import { useRouter } from 'vue-router'
-import { ADMIN_ROOT } from '@/router'
+import { ADMIN_ROOT, ORDER_ROOT } from '@/router'
 import { getToken } from '@/utils/auth'
 
 const router = useRouter()
@@ -281,6 +281,11 @@ function goAdmin(path) {
   }
   // 没登录就带着回跳地址去登录页，登录后直接落到该模块
   router.push({ path: '/login', query: { redirect: path } })
+}
+
+// 进点餐端。没登录的话，路由守卫会把人带到顾客登录页
+function goOrder() {
+  router.push(ORDER_ROOT)
 }
 
 /* --------------------------------------------------------------------------

@@ -1,4 +1,4 @@
-# 筷点外卖 · 前端（营销首页 + 商家管理后台）
+# 筷点外卖 · 前端（营销首页 + 顾客点餐端 + 商家管理后台）
 
 配套后端：**本仓库根目录**（Spring Boot + MyBatis + MySQL + Redis + WebSocket）
 
@@ -12,11 +12,31 @@
 
 ![营销首页](docs/screenshots/01-home.png)
 
-**商家管理后台**（统一挂在 `/manage` 下，含工作台、订单、菜品、套餐、分类、员工、数据统计七个模块）
+**顾客点餐端**（挂在 `/order` 下，顾客登录后才能进）
+
+| 顾客登录 | 点餐 |
+| :---: | :---: |
+| <img src="docs/screenshots/05-order-login.png" width="430"> | <img src="docs/screenshots/06-order-menu.png" width="430"> |
+
+| 确认订单 | 我的订单 |
+| :---: | :---: |
+| <img src="docs/screenshots/07-order-checkout.png" width="430"> | <img src="docs/screenshots/08-order-orders.png" width="430"> |
+
+**优惠券**（顾客在领券中心抢券，提交订单时选用，一单限一张；没抢到券的话结算页不会出现这一块）
+
+| 领券中心 | 提交订单时选用 |
+| :---: | :---: |
+| <img src="docs/screenshots/09-voucher-center.png" width="430"> | <img src="docs/screenshots/10-voucher-checkout.png" width="430"> |
+
+**商家管理后台**（统一挂在 `/manage` 下，含工作台、订单、菜品、套餐、分类、优惠券、员工、数据统计）
 
 | 工作台 | 菜品管理 |
 | :---: | :---: |
 | <img src="docs/screenshots/02-dashboard.png" width="430"> | <img src="docs/screenshots/03-dish.png" width="430"> |
+
+| 优惠券管理 |
+| :---: |
+| <img src="docs/screenshots/11-voucher-admin.png" width="860"> |
 
 后台每页顶栏左侧与侧边栏品牌区都能一键回首页：
 
@@ -49,15 +69,21 @@ npm run dev
 浏览器打开终端里输出的地址（默认 `http://127.0.0.1:5173`）。
 
 打开后先看到的是**营销首页**，纯 CSS + 内联 SVG 画的，不依赖任何图片文件。
-右上角「管理后台」下拉可以直接进后台各模块；未登录会先跳登录页，登录后再落回原来点的那个模块。
+首页顶栏放了两个入口：
 
-后台统一挂在 `/manage` 下，默认账号 **admin / 123456**（登录页有一键填入按钮）：
+- **立即点餐** → 进顾客点餐端，需要顾客登录（演示账号 `user01` / `123456`）
+- **管理后台** → 下拉直接进后台各模块，需要员工登录（`admin` / `123456`）
 
-| 入口 | 地址 |
-| --- | --- |
-| 营销首页 | `http://127.0.0.1:5173/#/` |
-| 登录 | `http://127.0.0.1:5173/#/login` |
-| 商家后台 | `http://127.0.0.1:5173/#/manage/dashboard` |
+两边各认各的登录态：拿顾客账号是进不去商家后台的，反过来也一样。
+
+| 入口 | 地址 | 账号 |
+| --- | --- | --- |
+| 营销首页 | `http://127.0.0.1:5173/#/` | 无需登录 |
+| 顾客登录 | `http://127.0.0.1:5173/#/order/login` | `user01` / `123456` |
+| 顾客点餐 | `http://127.0.0.1:5173/#/order` | 需先登录 |
+| 顾客订单 | `http://127.0.0.1:5173/#/order/orders` | 需先登录 |
+| 员工登录 | `http://127.0.0.1:5173/#/login` | `admin` / `123456` |
+| 商家后台 | `http://127.0.0.1:5173/#/manage/dashboard` | 需先登录 |
 
 ### 3. 打包
 
@@ -84,15 +110,16 @@ npm run preview   # 本地预览打包结果
 
 ### 2. 401 是登录态失效
 
-`JwtTokenAdminInterceptor` 校验 token 失败时返回 **HTTP 401**（不是 `code: 0`）。拦截器捕获 401 后会清掉本地 token 并跳回登录页。
+两端的拦截器校验失败时都返回 **HTTP 401**（不是 `code: 0`）。`request.js` 按请求来源分开处理：管理端的 401 清掉 `sky_admin_*` 并跳 `#/login`，顾客端的 401 清掉 `sky_user_*` 并跳 `#/order/login`。
 
-### 3. 管理端 token 的请求头名字叫 `token`
+### 3. 两套 token，请求头名字不一样
 
-```java
-sky.jwt.admin-token-name: token
-```
+- 管理端（`/admin/**`）用请求头 **`token`**，JWT 密钥 `itcast`
+- 顾客端（`/user/**`）用请求头 **`authentication`**，JWT 密钥 `itheima`
 
-用户端用的是 `authentication`，本后台只用管理端，所以固定发 `token`。
+`src/api/request.js` 按 URL 前缀自动挑对应的那个，业务代码里不用管。
+
+两套密钥不一样，所以顾客的令牌拿去调 `/admin/**` 必然验签失败 —— **顾客进不了商家后台是后端保证的**，前端路由守卫只是顺手再拦一道。
 
 ### 4. 时间格式不带秒
 
@@ -143,62 +170,77 @@ setmeal.setStatus(StatusConstant.DISABLE); // 停售
 
 WebSocket 也走同一个代理（`ws: true`），地址是 `ws://127.0.0.1:5173/ws/{sid}` → 转发到后端的 `/ws/{sid}`。
 
-### 10. 图片上传依赖阿里云 OSS
+### 10. 图片上传走后端本机磁盘
 
-`/admin/common/upload` 走的是 `application-dev.yml` 里配置的 `sky.alioss.*`。如果那对 access-key 已经失效，上传会失败 —— 上传组件会自动降级成「手填图片地址」，不会卡住你录数据。
+`/admin/common/upload` **不再依赖阿里云 OSS**，文件写到后端进程工作目录下的 `upload/`，
+再由后端的 `/images/**` 静态映射对外提供，接口返回的是 `/images/<uuid>.webp` 这种**相对地址**。
 
-### 11. 菜品图片：教学用的 OSS bucket 已经失效
+`vite.config.js` 里已经把 `/images` 代理到后端，所以本地开发上传完立刻就能看到图。
+相对地址的好处是部署时不用改前端代码 —— 浏览器按当前站点解析，配 Nginx 也一样能用。
 
-库里 `dish.image` 存的大多是黑马官方的 bucket：
+> 早先这版是走 OSS 的，那对 access-key 失效后上传会「接口返回成功但图片打不开」
+> （原因是后端 `AliOssUtil` 把异常吞了还照常返回 URL）。换成本机磁盘之后就没这个问题了。
+
+### 11. 菜品图片改成本地图了
+
+库里 `dish.image` 原本大多指向黑马官方的 bucket：
 
 ```
 https://sky-itcast.oss-cn-beijing.aliyuncs.com/xxxx.png
 ```
 
-这个 bucket 现在返回 **403 AccessDenied**（教学资源权限已收回），所以菜品列表整片显示不出图 —— 这**不是前端问题**，浏览器直接打开那个链接同样 403。
+这个 bucket 现在返回 **403 AccessDenied**（教学资源权限已收回），所以菜品列表整片显示不出图 ——
+这**不是前端问题**，浏览器直接打开那个链接同样 403。
 
-本项目的处理方式：
+现在已全部换成 `public/dishes/` 下的本地图片，`dish.image` 存相对路径 `/dishes/xxx.webp`
+（Vite 会把 `public/` 挂到根路径，所以 `/dishes/xxx.webp` 就能取到）。
 
-1. **`public/dishes/` 放了 3 张本地示意图片**，`dish.image` 直接填相对路径 `/dishes/xxx.jpg`（Vite 会把 `public/` 挂到根路径，所以 `/dishes/xxx.jpg` 就能取到）。当前已换上：
+要自己换图：把图片丢进 `public/dishes/`，再改 `dish.image`。用 SQL 最快：
 
-   | 菜品 | id | image |
-   | --- | --- | --- |
-   | 馋嘴牛蛙 | 64 | `/dishes/frog.jpg` |
-   | 江团鱼2斤 | 66 | `/dishes/fish-steamed.jpg` |
-   | 鸡蛋汤 | 68 | `/dishes/soup-egg.jpg` |
+```sql
+UPDATE dish SET image = '/dishes/你的图.webp' WHERE id = 64;
+```
 
-2. **其余菜品保持原样**（地址仍然失效）。为了不让列表里冒出 Element Plus 默认的「加载失败」字样，所有 `el-image` 都加了 `#error` 降级槽，加载失败时渲染成和无图状态一致的虚线占位。
+走后台的「修改菜品」弹窗上传也行，传完就是这个格式。
 
-3. **要自己补齐**：把图片文件丢进 `public/dishes/`，再把 `dish.image` 改成 `/dishes/文件名`。用 SQL 最快：
-
-   ```sql
-   UPDATE dish SET image = '/dishes/你的图.jpg' WHERE id = 64;
-   ```
-
-   走后台的「修改菜品」弹窗也行，就是每张都要点一次。
-
-> 这 3 张图取自 [TheMealDB](https://www.themealdb.com/)（开放的菜品图库），仅作课程演示用。
+> 这些图取自 [TheMealDB](https://www.themealdb.com/)（开放的菜品图库），仅作课程演示用。
+> 注意 `order_detail` 和 `shopping_cart` 表里**也各存了一份图片快照**，批量换图时别漏。
 
 ---
 
 ## 三、功能清单
 
+### 顾客点餐端
+
 | 模块 | 路由 | 对应后端接口 |
 | --- | --- | --- |
-| 营销首页 | `/` | 无（纯展示），右上角「管理后台」下拉进各模块 |
-| 登录 | `/login` | `POST /admin/employee/login` |
+| 顾客登录 | `/order/login` | `POST /user/user/loginByPassword`（本仓库后端新增的账号密码登录） |
+| 顾客注册 | `/order/register` | `POST /user/user/register`（同时会建一条默认收货地址，不然新用户下不了单） |
+| 重置密码 | `/order/forgot` | `POST /user/user/resetPassword`（用注册时留的手机号后四位核对） |
+| 点餐 | `/order` | `/user/category/list`、`/user/dish/list`、`/user/shoppingCart/add`｜`/sub`｜`/list` |
+| 确认订单 | `/order/checkout` | `/user/addressBook/default`、`/user/order/submit`（可选带 `voucherId`）、`/user/order/payment` |
+| 领券中心 | `/order/vouchers` | `/user/voucher/list`、`/user/voucher/my`、`/user/voucher/seckill/{id}` |
+| 我的订单 | `/order/orders` | `/user/order/historyOrders`、`/orderDetail/{id}`、`/cancel/{id}`、`/reminder/{id}` |
+
+### 商家管理后台
+
+| 模块 | 路由 | 对应后端接口 |
+| --- | --- | --- |
+| 营销首页 | `/` | 无（纯展示），顶栏两个入口分别进点餐端和后台 |
+| 员工登录 | `/login` | `POST /admin/employee/login` |
 | 工作台 | `/manage/dashboard` | `/admin/workspace/businessData`、`overviewOrders`、`overviewDishes`、`overviewSetmeals` |
 | 订单管理 | `/manage/order` | `/admin/order/conditionSearch`、`statistics`、`details/{id}`、`confirm`、`rejection`、`delivery/{id}`、`complete/{id}`、`cancel` |
 | 菜品管理 | `/manage/dish` | `/admin/dish` 增删改查、`/status/{status}`、`/list` |
 | 套餐管理 | `/manage/setmeal` | `/admin/setmeal` 增删改查、`/status/{status}` |
 | 分类管理 | `/manage/category` | `/admin/category` 增删改查、`/status/{status}`、`/list` |
+| 优惠券 | `/manage/voucher` | `/admin/voucher/page`、增删改、`/status/{status}`（每张券带已领取张数） |
 | 员工管理 | `/manage/employee` | `/admin/employee` 增改查、`/page`、`/status/{status}` |
 | 数据统计 | `/manage/statistics` | `/admin/report/turnoverStatistics`、`userStatistics`、`ordersStatistics`、`top10` |
 
 另外有两处全局能力：
 
 - **营业状态开关**（顶栏）：`GET /admin/shop/status`、`PUT /admin/shop/{status}`，状态存在 Redis 的 `SHOP_STATUS` 里。切换会弹确认框，因为误触会直接影响顾客下单。
-- **来单提醒**：连接 `ws://…/ws/{sid}`，收到 `{type: 2, orderId, content}` 时右下角滑出一张小票、播放提示音，点「去接单」直接跳到待接单列表。WebSocket 断了会按 1s→1.6 倍退避自动重连，最长 30s。
+- **来单提醒**：连接 `ws://…/ws/{sid}`，收到 `{type: 1, orderId, content}` 时右下角滑出一张小票、播放提示音，点「去接单」直接跳到待接单列表；`{type: 2, …}` 是顾客催单，小票上的文案不一样。WebSocket 断了会按 1s→1.6 倍退避自动重连，最长 30s。
 
 ---
 
@@ -212,21 +254,24 @@ src/
 ├── components/
 │   └── ImageUpload.vue     # 图片上传（失败可降级手填地址）
 ├── constants/index.js      # 订单状态、分类类型等枚举口径
-├── layout/                 # 侧边栏 / 顶栏 / 主框架 + WebSocket
-├── router/index.js         # hash 路由 + 登录守卫（首页公开，后台挂 /manage）
-├── stores/                 # pinia：user / shop / notice
+├── layout/                 # 后台的侧边栏 / 顶栏 / 主框架 + WebSocket
+│   └── OrderLayout.vue     # 顾客点餐端的外壳（顶栏 + 吸底购物车条）
+├── router/index.js         # hash 路由 + 两套登录守卫（首页公开、点餐端 /order、后台 /manage）
+├── stores/                 # pinia：user（员工）/ customer（顾客）/ shop / notice
 ├── styles/
 │   ├── tokens.css          # 设计令牌（颜色、字体、尺寸）
 │   └── index.css           # 全局基础样式 + Element Plus 校准
 ├── utils/                  # auth / format / sound
-└── views/                  # 各页面（home/ 是营销首页，其余是后台页面）
+└── views/                  # 各页面（home/ 营销首页、customer/ 顾客点餐端、其余是后台页面）
 ```
 
 ---
 
 ## 五、设计说明
 
-后台的界面以深色侧边栏加浅灰内容区为主：
+三个端（营销首页 / 顾客点餐端 / 商家后台）共用同一份设计令牌，改配色只需要动 `src/styles/tokens.css`。
+
+**后台**以深色侧边栏加浅灰内容区为主：
 
 - 侧边栏底色 `#16211F`，内容区 `#F4F5F2`，不用纯白，也没有渐变。
 - 品牌黄 `#FFC200` 只用在少数地方：侧边栏当前项的竖条、营业中指示灯、销量榜第一名。
@@ -234,14 +279,19 @@ src/
 - 橙红 `#D9480F` 只用于需要马上处理的状态：待接单角标、来单提醒、行内的「取消 / 拒单」。
 - 金额、订单号、数量用等宽字体加 `tabular-nums`，右对齐，方便扫读。
 - 工作台的今日数据做成一条横带；订单详情和来单提醒用了小票样式的锯齿边和虚线齿孔。
-- 营销首页用同一套变量，头图区整片铺品牌黄。页面没有用卡片，分栏靠细线，菜单用点线把菜名和价格连起来。头图区的手机和菜单缩略图都是 CSS 加内联 SVG 画的，整个首页没有图片文件，也没有外部请求。
 
-改配色只需要动 `src/styles/tokens.css`。
+**营销首页**用同一套变量，头图区整片铺品牌黄。页面没有用卡片，分栏靠细线，菜单用点线把菜名和价格连起来。头图区的手机和菜单缩略图都是 CSS 加内联 SVG 画的，整个首页没有图片文件，也没有外部请求。
+
+**顾客点餐端**沿用首页那套语言，但把品牌黄收得更紧：只有顾客登录页的左侧铺满品牌黄（这样和后台那块深墨的登录页一眼能区分开），点餐、结算、订单这些页面基本是白底加发丝线。吸底购物车条用深墨底，是页面上唯一的重色块。菜名和价格之间还是那条点线，结算卡和订单卡用了小票的锯齿边和虚线齿孔。
 
 ---
 
 ## 六、已知限制
 
-- **用户端（C 端）不在本后台范围内**。后端的 `/user/user/login` 要真实的微信小程序 `code` 换 openid，`/user/order/payment` 走微信支付，本地环境都跑不通。所以首页上的「立即点餐」不会跳到点单页，它是滚到页面内的示例菜单 —— 目前**没有真的顾客点单端**。
+- **支付是模拟的**。后端 `OrderServiceImpl.payment` 里调微信支付那段是注释掉的，接口直接返回成功并把订单置成「待接单 + 已支付」。所以不需要微信支付商户号也能跑通完整下单流程，但**没有真实收银**。
+- **原来的微信登录在网页上用不了**（它要小程序的 `code` 去换 openid），所以后端另加了一个账号密码登录接口 `/user/user/loginByPassword` 给点餐端用，原接口保留没动。
+- **重置密码是拿手机号后四位核对的，不是短信验证码**。这台机器没有短信服务，真发不出去。以后要接短信，把 `UserServiceImpl.resetPassword` 里那段核对换掉、前端表单换成验证码输入就行。
+- **菜品图片已改为本地图**。原先库里 20 多条 `dish.image` 指向已失效的教学 OSS bucket（403），现已全部换成 `web/public/dishes/` 下的本地图片，用相对路径 `/dishes/xxx.webp` 访问。
+- **后台上传的图片也落在本机磁盘**（`sky-server/upload/`，由后端 `/images/**` 映射对外提供），不再走阿里云 OSS。前端上传组件没变，返回的是 `/images/xxx.webp` 相对地址，Vite 代理已经配好。
 - 图表用的是 ECharts 全量引入，包体积偏大，课设够用；要优化可以换成按需引入。
 - 路由用 hash 模式，好处是部署到 Nginx 不需要额外配 `try_files`。

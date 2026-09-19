@@ -1,5 +1,6 @@
 package com.sky.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -21,6 +22,13 @@ public class User implements Serializable {
 
     //微信用户唯一标识
     private String openid;
+
+    //网页端登录账号
+    private String username;
+
+    //网页端登录密码，存的是 MD5 值
+    @JsonIgnore
+    private String password;
 
     //姓名
     private String name;

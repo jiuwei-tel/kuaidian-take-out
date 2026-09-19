@@ -112,6 +112,12 @@ public class ShoppingCartServiceImpl implements ShoppingCartService {
         shoppingCart.setUserId(currentId);
         //根据用户id和商品id查询购物车中是否存在当前商品
         List<ShoppingCart> list = shoppingCartMapper.list(shoppingCart);
+
+        // 车里没这道菜就直接返回。原来直接 list.get(0) 会抛 IndexOutOfBoundsException，
+        // 表现为 500 —— 比如用户在两个标签页里重复点减号，第二次就会走到这里。
+        if (list == null || list.isEmpty()) {
+            return;
+        }
         ShoppingCart cart = list.get(0);
 
         //判断当前删除的商品的数量是否为1

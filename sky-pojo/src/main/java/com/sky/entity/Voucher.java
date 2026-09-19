@@ -6,6 +6,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.io.Serializable;
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 /**
@@ -24,8 +25,17 @@ public class Voucher implements Serializable {
     //优惠券名称
     private String name;
 
+    //抵扣金额
+    private BigDecimal value;
+
+    //使用门槛：订单金额达到该值才能使用
+    private BigDecimal minAmount;
+
     //剩余库存
     private Integer stock;
+
+    //状态：1上架 0下架
+    private Integer status;
 
     //秒杀开始时间
     private LocalDateTime beginTime;

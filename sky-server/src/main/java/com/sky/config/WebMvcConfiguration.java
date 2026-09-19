@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sky.interceptor.JwtTokenAdminInterceptor;
 import com.sky.interceptor.JwtTokenUserInterceptor;
 import com.sky.json.JacksonObjectMapper;
+import com.sky.utils.LocalFileUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
@@ -36,6 +37,9 @@ public class WebMvcConfiguration extends WebMvcConfigurationSupport {
     @Autowired
     private JwtTokenUserInterceptor jwtTokenUserInterceptor;
 
+    @Autowired
+    private LocalFileUtil localFileUtil;
+
 
     /**
      * 注册自定义拦截器
@@ -51,6 +55,9 @@ public class WebMvcConfiguration extends WebMvcConfigurationSupport {
         registry.addInterceptor(jwtTokenUserInterceptor)
                 .addPathPatterns("/user/**")
                 .excludePathPatterns("/user/user/login")
+                .excludePathPatterns("/user/user/loginByPassword")
+                .excludePathPatterns("/user/user/register")
+                .excludePathPatterns("/user/user/resetPassword")
                 .excludePathPatterns("/user/shop/status");
 
     }
@@ -110,6 +117,10 @@ public class WebMvcConfiguration extends WebMvcConfigurationSupport {
         log.info("开始设置静态资源映射...");
         registry.addResourceHandler("/doc.html").addResourceLocations("classpath:/META-INF/resources/");
         registry.addResourceHandler("/webjars/**").addResourceLocations("classpath:/META-INF/resources/webjars/");
+
+        // 后台上传的图片存在本机磁盘上，这里映射成 /images/** 对外访问
+        registry.addResourceHandler("/images/**")
+                .addResourceLocations("file:" + localFileUtil.getDirFile().getAbsolutePath() + "/");
     }
 
 

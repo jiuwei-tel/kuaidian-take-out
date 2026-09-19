@@ -17,8 +17,18 @@ export default defineConfig({
     port: 5173,
     open: false,
     proxy: {
-      // 走代理是为了绕开后端没有配置 CORS 的问题，前端代码里直接写 /admin 即可
+      // 走代理是为了绕开后端没有配置 CORS 的问题，前端代码里直接写 /admin、/user 即可
       '/admin': {
+        target: BACKEND,
+        changeOrigin: true,
+      },
+      // 点餐端用的用户接口
+      '/user': {
+        target: BACKEND,
+        changeOrigin: true,
+      },
+      // 后台上传的菜品图片，存在后端本地磁盘上
+      '/images': {
         target: BACKEND,
         changeOrigin: true,
       },
