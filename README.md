@@ -9,7 +9,7 @@
   用户端多了**领券中心**（可抢的券 / 我的券）和**优惠券秒杀**（Redis + Lua 扣库存防超卖），
   提交订单时可以选用一张抵扣；管理端多了券的增删改查和上下架。
 - **加了一套网页端**：营销首页 + 顾客点餐端 + 商家后台，都在同仓库的 `web/` 里。
-  为此补了账号密码登录、注册、重置密码三个接口，并修了几处订单、购物车相关的缺陷（见「五、已知限制」）。
+  为此补了账号密码登录、注册、重置密码三个接口，并修了几处订单、购物车相关的缺陷。
 
 > 前端代码在**同一个仓库**的 [`web/`](web/) 目录（Vue 3 + Vite + Element Plus，
 > 含营销首页、顾客点餐端和商家管理后台）。
@@ -206,49 +206,7 @@ Knife4j 能正常打开，就说明后端和数据库都通了。
 
 ---
 
-## 五、已知限制
-
-- **菜品图片已改为本地**：库里 `dish.image` 原本指向黑马官方的教学 OSS bucket
-  （`sky-itcast.oss-cn-beijing.aliyuncs.com`），该 bucket 权限已被收回，现在返回 **403**。
-  现已换成 `web/public/dishes/` 下的本地图片，用相对路径 `/dishes/xxx.webp` 访问。
-- **图片上传也落在本机磁盘**：原课程走阿里云 OSS，AccessKey 一旦过期/欠费/被禁用，
-  `AliOssUtil.upload()` 会**吞掉异常并把 URL 照常返回**，表现为「上传成功但图片加载失败」。
-  现已改成写入 `sky-server/upload/`，由 `/images/**` 静态映射对外提供，不再依赖云服务。
-- **支付是模拟的**：`OrderServiceImpl.payment` 里调微信支付那段被注释掉了，接口直接返回成功
-  并把订单置为「待接单 + 已支付」。所以网页点餐端能跑通完整下单流程，但**没有真实收银**。
-- **微信登录在原环境下仍然跑不通**（`/user/user/login` 要真实小程序的 `code` 去换 openid），
-  所以另外加了 `/user/user/loginByPassword` 账号密码登录给网页点餐端用，原接口保留未动。
-- 支付回调 `PayNotifyController` 需要外部可达的回调地址，本地只能靠接口文档查看结构。
-
-### 与原版课程的差异
-
-除了文案改名，为配合仓库里的网页点餐端，后端还动了这几处：
-
-| 位置 | 改动 |
-| --- | --- |
-| `user` 表 | 加 `username` / `password` 两列并给 `username` 建唯一索引，预置 user01~03 三个演示账号（各带一条收货地址） |
-| `UserController` | 新增 `POST /user/user/loginByPassword`（登录）、`/register`（注册）、`/resetPassword`（重置密码） |
-| `OrderServiceImpl.payment` | 原来直接改库、绕过了 `paySuccess`，导致来单提醒推不出去；改为调 `paySuccess` |
-| `OrderServiceImpl.submitOrder` | 清购物车误用了按主键删除的 `delete(userId)`，改回按用户清空的 `clean(userId)` |
-| `OrderMapper.xml` 的 `update` | `<set>` 里缺 `pay_status` / `pay_method` / `checkout_time`，支付状态更新不上，已补齐 |
-| `OrderServiceImpl` 的 `cancel` / `rejection` / `userCancelById` | 已支付订单退款时调 `weChatPayUtil.refund`，而本机没有微信支付商户证书（`WeChatPayUtil.getClient` 里 `new File(null)` 直接抛 `NullPointerException`），导致拒单、取消订单一律返回 **500**。改为跳过真实退款、只把支付状态置为「已退款」 |
-| `voucher` / `voucher_order` / `orders` 三张表 | 原课程的优惠券只有「名称 + 库存」，没有面额，没法当钱抵扣。给 `voucher` 加 `value`（抵扣金额）、`min_amount`（使用门槛）、`status`（上下架）；`voucher_order` 加 `status`（0 未使用 / 1 已使用）、`used_time`、`order_id`；`orders` 加 `voucher_id`、`voucher_amount` |
-| `VoucherServiceImpl` 的秒杀 Lua 脚本 | 库存 key 不存在时，原来只把初始库存赋给了 Lua 局部变量、没写回 Redis，紧接着的 `decr` 就作用在一个不存在的 key 上（Redis 视作 0），库存直接变成 **-1** → **只有第一个用户能抢到，之后所有人都提示「已抢完」**。改为先 `exists` 判断、不存在则 `set` 回初始值 |
-| `VoucherController`（用户端 `/user/voucher`、管理端 `/admin/voucher`） | 原来只有 `POST /user/voucher/seckill/{id}` 一个接口。用户端补上「可抢的券」`/list` 与「我的券」`/my`；管理端新增券的分页查询、新增、修改、删除、上下架 |
-| `OrderServiceImpl.submitOrder` | 支持用券下单：校验券归属→是否已用→是否过期→订单原价是否够门槛，然后抵扣并把券核销，全程与订单落库同一事务。抵扣金额由后端按原价算，不采信前端传来的实付金额 |
-| `AliOssUtil` → `LocalFileUtil`（sky-common） | 上传改走本机磁盘。原来 `upload()` 的 `catch` 只 `println` 不 `rethrow`，OSS 出任何错（AccessKey 被禁用、bucket 权限不对、区域不匹配）都会被吞掉、照样返回一个 URL，前端拿到「格式正确但打不开」的地址，表现为「上传成功但图片加载失败」。换成写本地文件后异常能正常冒泡成 `code:0` |
-| `CommonController.upload` | 改用 `LocalFileUtil`，返回 `/images/xxx` 相对地址 |
-| `WebMvcConfiguration.addResourceHandlers` | 增加 `/images/**` → 本地上传目录的静态资源映射 |
-| `dish` 表的 `image` | 21 条指向已失效 OSS 的记录改为本地相对路径 `/dishes/xxx.webp`，图片放在 `web/public/dishes/`（原失效值备份在 `dish_image_backup` 表） |
-| `ShoppingCartServiceImpl.subShoppingCart` | 减菜数量时直接 `list.get(0)`，商品不在购物车里就会抛 `IndexOutOfBoundsException` 返回 **500**（两个标签页各点一次减号就能复现）。加了空集合判断 |
-| `ShoppingCartMapper.insertBatch` | 接口有方法、XML 里没有对应语句，「再来一单」调 `/user/order/repetition/{id}` 会报 `Invalid bound statement (not found)` → **500**。补上了批量插入 |
-| `OrderServiceImpl.submitOrder` 的金额 | 原来直接拿请求体里的 `amount` 入库：不传就撞 `orders.amount` 的 not null、接口报「未知错误」；传假数就能一块钱下单。改为**按购物车单价 × 数量在后端算**，请求体里的金额一律不看（券的门槛校验也随之改用算出来的原价） |
-| `Orders` 实体 | `packAmount` / `tablewareNumber` 由基本类型 `int` 改为 `Integer`。DTO 里是 `Integer`，请求不传这两个字段时 `BeanUtils.copyProperties` 拆箱会抛 NPE。同时在 `submitOrder` 里给 `packAmount`、`tablewareNumber`、`deliveryStatus`、`tablewareStatus` 补了默认值，因为这几列在库里都是 not null |
-| `GlobalExceptionHandler` | 原来只处理 `BaseException` 和 `SQLIntegrityConstraintViolationException`（且后者非重名分支不打堆栈）。补了 `Exception` 兜底并输出完整堆栈，否则后端出任何别的异常都只能看到一句「未知错误」，排查不了 |
-
----
-
-## 六、免责声明
+## 五、免责声明
 
 本项目是**学习用途**的课程练手项目，不是生产可用的系统：
 
