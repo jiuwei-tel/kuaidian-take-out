@@ -36,7 +36,7 @@
 | :---: | :---: |
 | <img src="web/docs/screenshots/06-order-menu.png" width="430"> | <img src="web/docs/screenshots/08-order-orders.png" width="430"> |
 
-**商家管理后台**（统一挂在 `/manage` 下，含工作台、订单、菜品、套餐、分类、员工、数据统计七个模块）
+**商家管理后台**（统一挂在 `/manage` 下，含工作台、订单、菜品、套餐、分类、优惠券、员工、数据统计八个模块）
 
 | 工作台 | 菜品管理 |
 | :---: | :---: |
