@@ -20,6 +20,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
 
 /**
  * 菜品管理
@@ -152,8 +153,9 @@ public class DishController {
         dish.setStatus(StatusConstant.ENABLE);//查询起售中的菜品
 
         //如果不存在，查询数据库，将查询结果放入redis中
+        //增删改、起售停售时会清缓存，TTL 只是兜底，防漏清
         list = dishService.listWithFlavor(dish);
-        redisTemplate.opsForValue().set(key, list);
+        redisTemplate.opsForValue().set(key, list, 30, TimeUnit.MINUTES);
 
         return Result.success(list);
     }

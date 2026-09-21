@@ -8,8 +8,8 @@ import javax.websocket.Session;
 import javax.websocket.server.PathParam;
 import javax.websocket.server.ServerEndpoint;
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * WebSocket服务
@@ -18,8 +18,9 @@ import java.util.Map;
 @ServerEndpoint("/ws/{sid}")
 public class WebSocketServer {
 
-    //存放会话对象
-    private static Map<String, Session> sessionMap = new HashMap();
+    //存放会话对象。这个 Map 会被 Tomcat 的多个 WebSocket 线程同时读写，
+    //用普通 HashMap 并发 put/remove 在扩容时可能丢数据甚至成环，必须用线程安全 Map
+    private static Map<String, Session> sessionMap = new ConcurrentHashMap<>();
 
     /**
      * 连接建立成功调用的方法

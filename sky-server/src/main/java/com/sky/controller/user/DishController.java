@@ -9,11 +9,13 @@ import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 @RestController("userDishController")
 @RequestMapping("/user/dish")
@@ -23,6 +25,9 @@ public class DishController {
 
     @Autowired
     private DishService dishService;
+
+    @Autowired
+    private RedisTemplate redisTemplate;
 
     /**
      * 根据分类id查询菜品
@@ -34,10 +39,21 @@ public class DishController {
     public Result<List<DishVO>> list(long categoryId){
         log.info("根据分类id查询菜品:{}",categoryId);
 
+        //缓存 key 与后台那边共用同一套规则：dish_分类id
+        //菜品是读多写少的典型，顾客端又是真正的读热点，缓存本来就该挂在这里
+        String key = "dish_" + categoryId;
+        List<DishVO> list = (List<DishVO>) redisTemplate.opsForValue().get(key);
+        if (list != null && list.size() > 0) {
+            return Result.success(list);
+        }
+
         Dish dish = new Dish();
         dish.setCategoryId(categoryId);
         dish.setStatus(StatusConstant.ENABLE); //起售状态
-        List<DishVO> list = dishService.listWithFlavor(dish);
+        list = dishService.listWithFlavor(dish);
+
+        //后台增删改、起售停售时会清掉 dish_*，TTL 只是兜底，防漏清
+        redisTemplate.opsForValue().set(key, list, 30, TimeUnit.MINUTES);
 
         return Result.success(list);
     }
