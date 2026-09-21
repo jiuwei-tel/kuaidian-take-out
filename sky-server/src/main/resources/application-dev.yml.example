@@ -15,7 +15,7 @@ sky:
     password: 你的MySQL密码
 
   # 阿里云 OSS：项目已改为把图片存到本机磁盘，这里不再需要。
-  # 保留这一段是为了兼容课程原版的配置结构，留占位值即可。
+  # 保留这一段是为了兼容原有的配置结构，留占位值即可。
   alioss:
     endpoint: oss-cn-你的地域.aliyuncs.com
     access-key-id: 你的AccessKeyId

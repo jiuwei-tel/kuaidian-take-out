@@ -114,12 +114,13 @@ npm run preview   # 本地预览打包结果
 
 ### 3. 两套 token，请求头名字不一样
 
-- 管理端（`/admin/**`）用请求头 **`token`**，JWT 密钥 `itcast`
-- 顾客端（`/user/**`）用请求头 **`authentication`**，JWT 密钥 `itheima`
+- 管理端（`/admin/**`）用请求头 **`token`**
+- 顾客端（`/user/**`）用请求头 **`authentication`**
 
 `src/api/request.js` 按 URL 前缀自动挑对应的那个，业务代码里不用管。
 
-两套密钥不一样，所以顾客的令牌拿去调 `/admin/**` 必然验签失败 —— **顾客进不了商家后台是后端保证的**，前端路由守卫只是顺手再拦一道。
+两边用的是**两套不同的签名密钥**（配在 `application.yml` 的 `sky.jwt.*` 下），
+所以顾客的令牌拿去调 `/admin/**` 必然验签失败 —— **顾客进不了商家后台是后端保证的**，前端路由守卫只是顺手再拦一道。
 
 ### 4. 时间格式不带秒
 
@@ -183,13 +184,13 @@ WebSocket 也走同一个代理（`ws: true`），地址是 `ws://127.0.0.1:5173
 
 ### 11. 菜品图片改成本地图了
 
-库里 `dish.image` 原本大多指向黑马官方的 bucket：
+库里 `dish.image` 早先存的是外部图床的链接：
 
 ```
-https://sky-itcast.oss-cn-beijing.aliyuncs.com/xxxx.png
+https://<bucket>.oss-cn-beijing.aliyuncs.com/xxxx.png
 ```
 
-这个 bucket 现在返回 **403 AccessDenied**（教学资源权限已收回），所以菜品列表整片显示不出图 ——
+那个 bucket 后来返回 **403 AccessDenied**（权限被收回），菜品列表就整片显示不出图 ——
 这**不是前端问题**，浏览器直接打开那个链接同样 403。
 
 现在已全部换成 `public/dishes/` 下的本地图片，`dish.image` 存相对路径 `/dishes/xxx.webp`
@@ -203,7 +204,7 @@ UPDATE dish SET image = '/dishes/你的图.webp' WHERE id = 64;
 
 走后台的「修改菜品」弹窗上传也行，传完就是这个格式。
 
-> 这些图取自 [TheMealDB](https://www.themealdb.com/)（开放的菜品图库），仅作课程演示用。
+> 这些图取自 [TheMealDB](https://www.themealdb.com/)（开放的菜品图库），仅作演示用。
 > 注意 `order_detail` 和 `shopping_cart` 表里**也各存了一份图片快照**，批量换图时别漏。
 
 ---

@@ -99,7 +99,7 @@ public class OrderServiceImpl implements OrderService {
         order.setOrderTime(LocalDateTime.now());
 
         //金额按购物车单价乘数量算，不采信前端传过来的 amount。
-        //原课程是直接拿 DTO 里的 amount 入库的，有两个问题：
+        //这里之前是直接拿 DTO 里的 amount 入库，有两个问题：
         //① 前端要是没传这个字段（比如换个端、或者自己调接口），orders.amount 是 not null，
         //   插入直接失败，接口报「未知错误」；
         //② 金额由客户端决定本身就不对，改一下请求体就能一块钱下单。

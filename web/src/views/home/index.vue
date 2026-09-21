@@ -246,7 +246,7 @@
 
         <div class="foot-bottom">
           <span>© 2026 筷点外卖</span>
-          <span>本站为课程演示项目，非真实商户</span>
+          <span>本站为演示项目，非真实商户</span>
         </div>
       </div>
     </footer>
